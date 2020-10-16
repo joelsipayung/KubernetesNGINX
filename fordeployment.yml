@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubernetesnginx
+  namespace: kubernetesnginx-ns
+  labels:
+    app: kubernetesnginx
+  annotations:
+    description: sedang belajar kubernetes dengan nginx deployment
+    aplikasi: menampilkan index html dengan nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kubernetesnginx #match label ini harus sama dengan label template
+  template:
+    metadata:
+      labels:
+        app: kubernetesnginx
+    spec:
+      containers:
+        - name: kubernetesnginx
+          image: joelsipayung/nginxku:v1
+          ports:
+            - containerPort: 80
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5 #pertama kali melakukan pengecekan menunggu seberapa lama
+            periodSeconds: 10 #periode pengecekan
+            timeoutSeconds: 1 #timeout nya berapa lama, misalnya balikannya lebih dari 1 second maka dianggap tidak sehat
+            successThreshold: 1 #tadinya tdk sehat dan di cek ternyata sehat(mau berapa kali di anggap sehat)
+            failureThreshold: 3 #berapa kali dianggap tidak sehat dan harus di restart 
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubernetesnginx
+  namespace: kubernetesnginx-ns
+  labels:
+    app: kubernetesnginx
+spec:
+  type: NodePort
+  selector:
+    app: kubernetesnginx
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+#    NodePort: 30001
+
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: kubernetesnginx-ingress
+  namespace: kubernetesnginx-ns
+  labels:
+    app: kubernetesnginx
+spec:
+  rules:
+    - host: kubernetesnginx.joelverdy.com
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: kubernetesnginx # harus sama dengan nama service nya
+              servicePort: 80
