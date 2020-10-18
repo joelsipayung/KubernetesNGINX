@@ -77,7 +77,7 @@ spec:
     - host: kubernetesnginx.joelverdy.com
       http:
         paths:
-          - path: /service
+          - path: /
             backend:
               serviceName: kubernetesnginx # harus sama dengan nama service nya
               servicePort: 8080 # sama dengan port service
