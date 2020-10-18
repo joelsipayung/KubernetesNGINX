@@ -5,18 +5,31 @@ metadata:
   namespace: kubernetesnginx-ns
   labels:
     app: kubernetesnginx
+    team: devops
   annotations:
     description: sedang belajar kubernetes dengan nginx deployment
     aplikasi: menampilkan index html dengan nginx
 spec:
-  replicas: 1
+  replicas: 3
   selector:
-    matchLabels:
-      app: kubernetesnginx #match label ini harus sama dengan label template
+     matchExpressions:
+        - key: app
+          operator: In
+          values:
+            - kubernetesnginx
+        - key: env
+          operator: In
+          values:
+            - development
+            - devops
+            - qa
+#    matchLabels:
+#      app: kubernetesnginx #match label ini harus sama dengan label template
   template:
     metadata:
       labels:
         app: kubernetesnginx
+        env: development
     spec:
       containers:
         - name: kubernetesnginx
@@ -27,11 +40,11 @@ spec:
             httpGet:
               path: /
               port: 80
-            initialDelaySeconds: 5 #pertama kali melakukan pengecekan menunggu seberapa lama
-            periodSeconds: 10 #periode pengecekan
-            timeoutSeconds: 1 #timeout nya berapa lama, misalnya balikannya lebih dari 1 second maka dianggap tidak sehat
-            successThreshold: 1 #tadinya tdk sehat dan di cek ternyata sehat(mau berapa kali di anggap sehat)
-            failureThreshold: 3 #berapa kali dianggap tidak sehat dan harus di restart 
+            initialDelaySeconds: 5 #pertama kali kalau melakukan pengecekan menunggu seberapa lama (default 0)
+            periodSeconds: 2 #periode pengecekan (default 10)
+            timeoutSeconds: 1 #timeout nya berapa lama, misalnya balikannya lebih dari 1 second maka dianggap tidak sehat (default 1)
+            successThreshold: 1 #tadinya tdk sehat dan di cek ternyata sehat(mau berapa kali di anggap sehat) (default 1)
+            failureThreshold: 4 #berapa kali dianggap tidak sehat dan harus di restart  (default 3) 
 
 ---
 apiVersion: v1
@@ -40,14 +53,14 @@ metadata:
   name: kubernetesnginx
   namespace: kubernetesnginx-ns
   labels:
-    app: kubernetesnginx
+    app: kubernetesnginx #samadengan label pod
 spec:
   type: NodePort
   selector:
     app: kubernetesnginx
   ports:
   - name: http
-    port: 80
+    port: 8080
     targetPort: 80
 #    NodePort: 30001
 
@@ -64,7 +77,7 @@ spec:
     - host: kubernetesnginx.joelverdy.com
       http:
         paths:
-          - path: /
+          - path: /service
             backend:
               serviceName: kubernetesnginx # harus sama dengan nama service nya
-              servicePort: 80
+              servicePort: 8080 # sama dengan port service
